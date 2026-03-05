@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obit Watch</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@300;400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8; --warm-white: #FAF7F2; --ink: #1A1714; --ink-faded: #4A4540;
+    --ink-light: #8A8580; --rust: #8B3A2A; --rust-light: #C4614D; --gold: #B8966A;
+    --gold-light: #D4B48A; --border: #D8D0C4; --border-light: #EAE4DC;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+
+  header {
+    background: var(--ink); padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; position: sticky; top: 0; z-index: 100;
+    border-bottom: 2px solid var(--gold);
+  }
+  .logo { display: flex; align-items: baseline; gap: 10px; }
+  .logo-word { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--cream); letter-spacing: 0.08em; }
+  .logo-tagline { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--gold); font-weight: 300; letter-spacing: 0.12em; text-transform: uppercase; }
+  .alert-badge { background: var(--rust); color: white; font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; padding: 3px 8px; border-radius: 2px; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem; display: grid; grid-template-columns: 1fr 380px; gap: 2.5rem; align-items: start; }
+
+  .section-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .watchlist-panel { background: var(--warm-white); border: 1px solid var(--border); border-top: 3px solid var(--ink); }
+  .panel-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
+  .panel-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 400; }
+  .watch-count { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--ink-light); }
+
+  .add-form { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-light); background: var(--cream); }
+  .form-group { margin-bottom: 0.75rem; }
+  label { display: block; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faded); margin-bottom: 0.35rem; font-family: 'IBM Plex Mono', monospace; }
+  input[type="text"], input[type="email"], select { width: 100%; padding: 0.6rem 0.75rem; background: var(--warm-white); border: 1px solid var(--border); color: var(--ink); font-family: 'IBM Plex Sans', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.2s; border-radius: 0; }
+  input:focus { border-color: var(--ink); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .btn-add { width: 100%; padding: 0.7rem; background: var(--ink); color: var(--cream); border: none; font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; margin-top: 0.25rem; }
+  .btn-add:hover { background: var(--rust); }
+
+  .watch-entries { padding: 0.75rem 0; }
+  .watch-entry { padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--border-light); display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; transition: background 0.15s; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .watch-entry:hover { background: var(--cream); }
+  .watch-entry:last-child { border-bottom: none; }
+  .entry-info { flex: 1; }
+  .entry-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 500; margin-bottom: 0.2rem; }
+  .entry-meta { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--ink-light); display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; background: #5A9E6F; animation: pulse 2s ease-in-out infinite; }
+  .btn-remove { background: none; border: none; color: var(--border); cursor: pointer; font-size: 1.1rem; transition: color 0.15s; flex-shrink: 0; }
+  .btn-remove:hover { color: var(--rust); }
+  .empty-state { padding: 2.5rem 1.5rem; text-align: center; color: var(--ink-light); }
+  .empty-state-icon { font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.4; }
+  .empty-state p { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.95rem; }
+
+  .alerts-section { margin-bottom: 2rem; }
+  .alert-card { background: #FDF5F3; border: 1px solid var(--rust-light); border-left: 4px solid var(--rust); padding: 1.25rem 1.5rem; margin-bottom: 0.75rem; position: relative; animation: alertIn 0.4s ease; }
+  @keyframes alertIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+  .alert-new-tag { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; background: var(--rust); color: white; padding: 2px 6px; margin-bottom: 0.5rem; display: inline-block; }
+  .alert-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 500; margin-bottom: 0.3rem; }
+  .alert-body { font-size: 0.85rem; color: var(--ink-faded); line-height: 1.5; margin-bottom: 0.75rem; }
+  .alert-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .btn-action { padding: 0.4rem 0.9rem; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; border-radius: 0; text-decoration: none; display: inline-block; }
+  .btn-primary { background: var(--ink); color: var(--cream); border: 1px solid var(--ink); }
+  .btn-primary:hover { background: var(--rust); border-color: var(--rust); }
+  .btn-secondary { background: transparent; color: var(--ink-faded); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--ink-faded); color: var(--ink); }
+  .btn-dismiss { position: absolute; top: 0.75rem; right: 1rem; background: none; border: none; color: var(--ink-light); cursor: pointer; font-size: 1rem; transition: color 0.15s; }
+  .btn-dismiss:hover { color: var(--rust); }
+
+  .activity-timeline { position: relative; padding-left: 1.5rem; }
+  .activity-timeline::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 0; width: 1px; background: var(--border); }
+  .activity-item { position: relative; margin-bottom: 1.5rem; }
+  .activity-dot { position: absolute; left: -1.5rem; top: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--border); border: 2px solid var(--cream); transform: translateX(-4px); }
+  .activity-dot.match { background: var(--rust); }
+  .activity-dot.checked { background: var(--gold); }
+  .activity-timestamp { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--ink-light); margin-bottom: 0.25rem; }
+  .activity-text { font-size: 0.88rem; color: var(--ink-faded); line-height: 1.4; }
+  .activity-text strong { color: var(--ink); font-weight: 500; }
+
+  .settings-panel { background: var(--warm-white); border: 1px solid var(--border); padding: 1.25rem 1.5rem; margin-top: 1.5rem; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid var(--border-light); }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 0.85rem; color: var(--ink-faded); }
+  .toggle { width: 38px; height: 20px; background: var(--border); border-radius: 10px; position: relative; cursor: pointer; transition: background 0.2s; border: none; flex-shrink: 0; }
+  .toggle::after { content: ''; position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+  .toggle.on { background: var(--rust); }
+  .toggle.on::after { left: 21px; }
+
+  .sources-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.75rem; }
+  .source-chip { padding: 0.4rem 0.6rem; border: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--ink-light); display: flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.15s; background: var(--warm-white); }
+  .source-chip.active { border-color: var(--ink); color: var(--ink); background: var(--cream); }
+  .source-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+  .source-chip.active .source-dot { background: #5A9E6F; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 2rem; }
+  .stat { background: var(--warm-white); padding: 1rem 1.25rem; text-align: center; }
+  .stat-number { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 400; line-height: 1; margin-bottom: 0.3rem; }
+  .stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); }
+
+  .intro { background: var(--ink); color: var(--cream); padding: 2rem; margin-bottom: 2rem; position: relative; overflow: hidden; }
+  .intro::before { content: '✦'; position: absolute; right: 1.5rem; top: 1.5rem; font-size: 3rem; color: var(--gold); opacity: 0.3; }
+  .intro h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 400; margin-bottom: 0.6rem; line-height: 1.3; }
+  .intro h1 em { color: var(--gold-light); }
+  .intro p { font-size: 0.88rem; color: rgba(245,240,232,0.7); line-height: 1.6; max-width: 520px; }
+
+  @media (max-width: 800px) {
+    .container { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .sources-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-word">Obit Watch</span>
+    <span class="logo-tagline">Obituary Monitor</span>
+  </div>
+  <span class="alert-badge" id="alertBadge" style="display:none">● 2 new</span>
+</header>
+
+<div class="container">
+  <div>
+    <div class="intro">
+      <h1>Stay close to those who matter,<br><em>even through loss.</em></h1>
+      <p>Obit Watch quietly monitors obituary databases and death notices for the names you care about. When a match is found, you'll be notified so you can reach out, send flowers, or pay your respects.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-number" id="stat-watching">—</div><div class="stat-label">Watching</div></div>
+      <div class="stat"><div class="stat-number" id="stat-matches">—</div><div class="stat-label">Matches Found</div></div>
+      <div class="stat"><div class="stat-number" id="stat-checks">—</div><div class="stat-label">Names Scanned</div></div>
+    </div>
+
+    <div class="alerts-section" id="alertsSection">
+      <div class="section-label">Recent Matches</div>
+    </div>
+
+    <div>
+      <div class="section-label" style="margin-bottom:0.75rem">
+        Scan Activity
+        <button id="scanBtn" onclick="triggerScan()" style="margin-left:auto;padding:.3rem .8rem;background:var(--ink);color:var(--cream);border:none;font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;flex-shrink:0">Scan Now</button>
+      </div>
+      <div class="activity-timeline" id="scanTimeline">
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--ink-light)">Loading...</p>
+      </div>
+    </div>
+
+    <div class="settings-panel">
+      <div class="section-label" style="margin-bottom:0.75rem">Notification Settings</div>
+      <div class="setting-row"><span class="setting-label">Email alerts on match</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="setting-row"><span class="setting-label">Daily scan digest</span><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+      <div class="setting-row"><span class="setting-label">Include nearby locations</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      <div style="margin-top:1.25rem">
+        <div class="section-label">Active Sources</div>
+        <div class="sources-grid" id="sourcesGrid">
+          <div style="font-size:0.75rem;color:var(--ink-faded);font-family:'IBM Plex Mono',monospace">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="watchlist-panel">
+      <div class="panel-header">
+        <span class="panel-title">Your Watchlist</span>
+        <span class="watch-count" id="watchCountDisplay">0 names</span>
+      </div>
+      <div class="add-form">
+        <div class="section-label" style="margin-bottom:0.75rem">Add a Name</div>
+        <div class="form-group"><label>Full Name *</label><input type="text" id="inputName" placeholder="e.g. Robert Henderson" /></div>
+        <div class="form-row">
+          <div class="form-group"><label>City / Region</label><input type="text" id="inputCity" placeholder="e.g. Chicago" /></div>
+          <div class="form-group"><label>State</label><input type="text" id="inputState" placeholder="e.g. IL" maxlength="2" /></div>
+        </div>
+        <div class="form-group">
+          <label>Approx. Age Range</label>
+          <select id="inputAge">
+            <option value="">Any age</option>
+            <option value="50-65">50–65</option>
+            <option value="65-80">65–80</option>
+            <option value="80+">80+</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Your Note (optional)</label><input type="text" id="inputNote" placeholder="e.g. Mike's dad" /></div>
+        <button class="btn-add" onclick="addEntry()">+ Add to Watchlist</button>
+      </div>
+      <div class="watch-entries" id="watchEntries">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-state-icon">◌</div>
+          <p>No names watched yet.<br>Add a name above to begin.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-panel" style="margin-top:1rem">
+      <div class="section-label" style="margin-bottom:0.75rem">Alert Delivery</div>
+      <div class="form-group" style="margin-top:0.5rem">
+        <label>Notify Email(s)</label>
+        <input type="email" id="settingAlertTo" placeholder="you@example.com" />
+        <div style="font-size:0.75rem;color:var(--ink-faded);margin-top:0.25rem">Separate multiple addresses with commas</div>
+      </div>
+      <button class="btn-add" style="margin-top:0.5rem;width:100%" onclick="saveAlertTo()">Save Email</button>
+      <div id="settingsStatus" style="margin-top:0.5rem;font-size:0.78rem;font-family:'IBM Plex Mono',monospace;display:none"></div>
+    </div>
+  </div>
+
+<script>
+  // ── Config ─────────────────────────────────────────────────────────────
+  // API is on port 8001 on the same host as the UI
+  const API = `http://${location.hostname}:8001/api`;
+
+  // ── Boot ───────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAll();
+    loadSettings();
+    loadSources();
+    // Refresh matches + scan log every 30s so new results appear automatically
+    setInterval(loadAll, 30000);
+    document.getElementById('inputName').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addEntry();
+    });
+  });
+
+  async function loadAll() {
+    await Promise.all([loadWatchlist(), loadMatches(), loadScanLog()]);
+  }
+
+  // ── Settings ────────────────────────────────────────────────────────────
+  async function loadSettings() {
+    try {
+      const s = await apiFetch('/settings');
+      document.getElementById('settingAlertTo').value = s.alert_to || '';
+    } catch(e) { console.warn('loadSettings:', e); }
+  }
+
+  async function loadSources() {
+    try {
+      const sources = await apiFetch('/sources');
+      const grid = document.getElementById('sourcesGrid');
+      grid.innerHTML = sources.map(s => `
+        <div class="source-chip ${s.enabled ? 'active' : ''}"
+             data-source="${s.name}"
+             onclick="toggleSource(this, '${s.name}')">
+          <span class="source-dot"></span>${s.label}
+        </div>`).join('');
+    } catch(e) { console.warn('loadSources:', e); }
+  }
+
+  async function toggleSource(el, name) {
+    try {
+      const r = await apiFetch(`/sources/${encodeURIComponent(name)}/toggle`, { method: 'POST' });
+      el.classList.toggle('active', r.enabled);
+    } catch(e) { console.warn('toggleSource:', e); }
+  }
+
+  async function saveAlertTo() {
+    const val = document.getElementById('settingAlertTo').value.trim();
+    try {
+      await apiFetch('/settings', { method: 'POST', body: JSON.stringify({ alert_to: val }) });
+      showSettingsStatus('✓ Saved', 'var(--ink)');
+    } catch(e) {
+      showSettingsStatus('✗ Save failed — ' + e.message, 'var(--rust)');
+    }
+  }
+
+  function showSettingsStatus(msg, color) {
+    const el = document.getElementById('settingsStatus');
+    el.textContent = msg;
+    el.style.color = color;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+  }
+
+
+
+  // ── API helpers ────────────────────────────────────────────────────────
+  async function apiFetch(path, opts = {}) {
+    const r = await fetch(API + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts
+    });
+    if (!r.ok) throw new Error(`API ${path} → ${r.status}`);
+    return r.json();
+  }
+
+  function showToast(msg, isError = false) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
+      background:${isError ? 'var(--rust)' : 'var(--ink)'};color:var(--cream);
+      font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.06em;
+      padding:.6rem 1.2rem;border-left:3px solid var(--gold);
+      animation:slideIn .3s ease;pointer-events:none`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  // ── Watchlist ──────────────────────────────────────────────────────────
+  async function loadWatchlist() {
+    try {
+      const watches = await apiFetch('/watchlist');
+      renderWatchlist(watches);
+      document.getElementById('stat-watching').textContent = watches.length;
+    } catch(e) {
+      console.error('watchlist load failed:', e);
+    }
+  }
+
+  function renderWatchlist(watches) {
+    const c = document.getElementById('watchEntries');
+    const count = watches.length;
+    document.getElementById('watchCountDisplay').textContent =
+      count + (count === 1 ? ' name' : ' names');
+    document.getElementById('emptyState').style.display = count === 0 ? 'block' : 'none';
+    c.querySelectorAll('.watch-entry').forEach(el => el.remove());
+
+    watches.forEach(w => {
+      const div = document.createElement('div');
+      div.className = 'watch-entry';
+      const loc = [w.city, w.state].filter(Boolean).join(', ') || 'Any location';
+      const added = new Date(w.added_at + 'Z').toLocaleDateString('en-US',
+        { month: 'short', day: 'numeric', year: 'numeric' });
+      div.innerHTML = `
+        <div class="entry-info">
+          <div class="entry-name">${w.first_name} ${w.last_name}</div>
+          <div class="entry-meta">
+            <span><span class="status-dot"></span> Watching</span>
+            <span>📍 ${loc}</span>
+            <span>Added ${added}</span>
+            ${w.note ? `<span style="color:var(--gold)">${w.note}</span>` : ''}
+          </div>
+        </div>
+        <button class="btn-remove" onclick="removeEntry(${w.id})" title="Remove">✕</button>`;
+      c.appendChild(div);
+    });
+  }
+
+  async function addEntry() {
+    const firstLast = document.getElementById('inputName').value.trim();
+    if (!firstLast) {
+      const el = document.getElementById('inputName');
+      el.style.borderColor = 'var(--rust)'; el.focus();
+      setTimeout(() => el.style.borderColor = '', 1200);
+      return;
+    }
+
+    // Split "First Last" — everything after first word is last name
+    const parts = firstLast.split(/\s+/);
+    const first_name = parts[0];
+    const last_name  = parts.slice(1).join(' ') || parts[0];
+
+    // Parse age range
+    const ageVal = document.getElementById('inputAge').value;
+    let age_min = null, age_max = null;
+    if (ageVal === '50-65')     { age_min = 50; age_max = 65; }
+    else if (ageVal === '65-80') { age_min = 65; age_max = 80; }
+    else if (ageVal === '80+')   { age_min = 80; }
+
+    const body = {
+      first_name,
+      last_name,
+      city:  document.getElementById('inputCity').value.trim() || null,
+      state: document.getElementById('inputState').value.trim().toUpperCase() || null,
+      age_min, age_max,
+      note:  document.getElementById('inputNote').value.trim() || null,
+    };
+
+    // Disable button while saving
+    const btn = document.querySelector('.btn-add');
+    btn.textContent = 'Searching...';
+    btn.disabled = true;
+
+    try {
+      await apiFetch('/watchlist', {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+
+      ['inputName','inputCity','inputState','inputNote'].forEach(
+        id => document.getElementById(id).value = ''
+      );
+      document.getElementById('inputAge').value = '';
+
+      showToast(`Added ${first_name} ${last_name} — searching now...`);
+      await loadWatchlist();
+
+      // Poll for matches a few times so results appear quickly if found
+      let polls = 0;
+      const poll = setInterval(async () => {
+        await loadMatches();
+        if (++polls >= 6) clearInterval(poll); // stop after ~30s
+      }, 5000);
+
+    } catch(e) {
+      showToast('Failed to add — is the API running?', true);
+      console.error(e);
+    } finally {
+      btn.textContent = '+ Add to Watchlist';
+      btn.disabled = false;
+    }
+  }
+
+  async function removeEntry(id) {
+    try {
+      await apiFetch(`/watchlist/${id}`, { method: 'DELETE' });
+      showToast('Removed from watchlist');
+      await loadWatchlist();
+    } catch(e) {
+      showToast('Failed to remove', true);
+    }
+  }
+
+  // ── Matches ────────────────────────────────────────────────────────────
+  async function loadMatches() {
+    try {
+      const matches = await apiFetch('/matches');
+      renderMatches(matches);
+      document.getElementById('stat-matches').textContent = matches.length;
+      const badge = document.getElementById('alertBadge');
+      if (matches.length > 0) {
+        badge.textContent = `● ${matches.length} new`;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch(e) {
+      console.error('matches load failed:', e);
+    }
+  }
+
+  function renderMatches(matches) {
+    const section = document.getElementById('alertsSection');
+    section.querySelectorAll('.alert-card').forEach(el => el.remove());
+
+    if (matches.length === 0) {
+      const empty = document.createElement('p');
+      empty.id = 'no-matches-msg';
+      empty.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:.8rem;color:var(--ink-light);padding:.5rem 0';
+      empty.textContent = 'No matches found yet.';
+      // Only add if not already there
+      if (!document.getElementById('no-matches-msg')) section.appendChild(empty);
+      return;
+    }
+    document.getElementById('no-matches-msg')?.remove();
+
+    matches.forEach(m => {
+      const years = (m.birth_year || m.death_year)
+        ? `<span style="color:var(--rust);font-size:.85rem">${m.birth_year||'?'} – ${m.death_year||'?'}</span>`
+        : '';
+      const loc    = m.location    ? `<span style="color:var(--ink-light);font-size:.82rem">📍 ${m.location}</span>` : '';
+      const note   = m.watch_note  ? `<span style="color:var(--gold);font-size:.78rem">Watching for: ${m.watch_note}</span>` : '';
+      const snip   = m.obit_snippet ? `<div class="alert-body">"${m.obit_snippet.slice(0,240)}..."</div>` : '';
+      const viewBtn = m.obit_url
+        ? `<a href="${m.obit_url}" target="_blank" class="btn-action btn-primary">View Obituary</a>`
+        : '';
+      const found = new Date(m.found_at + 'Z').toLocaleDateString('en-US',
+        { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const card = document.createElement('div');
+      card.className = 'alert-card';
+      card.id = `match-${m.id}`;
+      card.innerHTML = `
+        <button class="btn-dismiss" onclick="dismissMatch(${m.id})">✕</button>
+        <div class="alert-new-tag">Match Found · ${found}</div>
+        <div class="alert-title">${m.first_name} ${m.last_name}</div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:.5rem">${years}${loc}${note}</div>
+        ${snip}
+        <div class="alert-actions">
+          ${viewBtn}
+          <button class="btn-action btn-secondary" onclick="dismissMatch(${m.id})">Not a Match</button>
+        </div>`;
+      section.appendChild(card);
+    });
+  }
+
+  async function dismissMatch(id) {
+    try {
+      await apiFetch(`/matches/${id}/dismiss`, { method: 'POST' });
+      const el = document.getElementById(`match-${id}`);
+      el.style.transition = 'opacity .3s, transform .3s';
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(-20px)';
+      setTimeout(async () => { el.remove(); await loadMatches(); }, 300);
+    } catch(e) {
+      showToast('Failed to dismiss', true);
+    }
+  }
+
+  // ── Scan log ───────────────────────────────────────────────────────────
+  async function loadScanLog() {
+    try {
+      const logs = await apiFetch('/scan/log');
+      renderScanLog(logs);
+      // Update total checks stat
+      const total = logs.reduce((sum, l) => sum + (l.names_scanned || 0), 0);
+      document.getElementById('stat-checks').textContent = total;
+    } catch(e) {
+      console.error('scan log load failed:', e);
+    }
+  }
+
+  function renderScanLog(logs) {
+    const tl = document.getElementById('scanTimeline');
+    tl.innerHTML = '';
+    if (logs.length === 0) {
+      tl.innerHTML = '<p style="font-family:\'IBM Plex Mono\',monospace;font-size:.8rem;color:var(--ink-light)">No scans run yet.</p>';
+      return;
+    }
+    logs.slice(0, 8).forEach(l => {
+      const when = new Date(l.started_at + 'Z').toLocaleString('en-US',
+        { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      const isMatch = l.matches_found > 0;
+      const dotClass = isMatch ? 'match' : 'checked';
+      const text = l.finished_at
+        ? (isMatch
+            ? `Scan complete · <strong>${l.matches_found} match${l.matches_found>1?'es':''} found</strong>`
+            : `Scanned ${l.names_scanned} name${l.names_scanned!==1?'s':''} · no new matches`)
+        : 'Scan in progress...';
+      tl.innerHTML += `
+        <div class="activity-item">
+          <div class="activity-dot ${dotClass}"></div>
+          <div class="activity-timestamp">${when}</div>
+          <div class="activity-text">${text}${l.errors ? ` <span style="color:var(--rust)">(${l.errors})</span>` : ''}</div>
+        </div>`;
+    });
+  }
+
+  // ── Manual scan trigger ────────────────────────────────────────────────
+  async function triggerScan() {
+    const btn = document.getElementById('scanBtn');
+    btn.textContent = 'Scanning...';
+    btn.disabled = true;
+    try {
+      const result = await apiFetch('/scan', { method: 'POST' });
+      showToast(`Scan complete — ${result.new_matches} new match${result.new_matches!==1?'es':''}`);
+      await loadAll();
+    } catch(e) {
+      showToast('Scan failed — check API', true);
+    } finally {
+      btn.textContent = 'Scan Now';
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

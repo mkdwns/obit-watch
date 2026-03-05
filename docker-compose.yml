@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+
+  obit-watch-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: obit-watch-api
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - /home/mkdwns/obit-watch/data:/app/data
+      - /home/mkdwns/obit-watch/backend/.env:/app/.env:ro
+    env_file:
+      - ./backend/.env
+
+  obit-watch-ui:
+    image: nginx:alpine
+    container_name: obit-watch-ui
+    restart: unless-stopped
+    ports:
+      - "3232:80"
+    volumes:
+      - /home/mkdwns/obit-watch/index.html:/usr/share/nginx/html/index.html:ro
+      - /home/mkdwns/obit-watch/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+networks:
+  default:
+    name: obit-watch-net
