@@ -19,7 +19,7 @@ jobs:
         run: echo "VERSION=v1.${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Build
-        run: docker build -t ghcr.io/${{ github.repository }}:${{ env.VERSION }} .
+        run: docker build -t ghcr.io/${{ github.repository }}:${{ env.VERSION }} ./backend
 
       - name: Push
         run: docker push ghcr.io/${{ github.repository }}:${{ env.VERSION }}
