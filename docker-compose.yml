@@ -13,12 +13,12 @@ services:
       - ./data:/app/data
     environment:
       - DB_PATH=/app/data/obit_watch.db
-      - SMTP_HOST=smtp.gmail.com
-      - SMTP_PORT=587
-      - SMTP_USER=mkdwns@gmail.com
-      - SMTP_PASS=eqzj brse yoqm bgul
-      - ALERT_FROM=mkdwns@gmail.com
-      - ALERT_TO=mkdwns@gmail.com
+      - SMTP_HOST="${SMTP_HOST}"
+      - SMTP_PORT="${SMTP_PORT}"
+      - SMTP_USER="${SMTP_USER}"
+      - SMTP_PASS="${SMTP_PASS}"
+      - ALERT_FROM="${ALERT_FROM}"
+      - ALERT_TO="${ALERT_TO}"
       - SCAN_CRON_HOUR=6
       - SCAN_CRON_MINUTE=0
       - SCRAPE_DELAY=3
