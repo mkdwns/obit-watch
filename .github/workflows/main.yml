@@ -23,7 +23,9 @@ jobs:
         run: echo "VERSION=v1.${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Build
-        run: docker build -t ghcr.io/mkdwns/obit-watch-backend:${{ env.VERSION }} ./backend
+        run: |
+          docker build -t ghcr.io/mkdwns/obit-watch-backend:${{ env.VERSION }} ./backend
+          docker tag ghcr.io/mkdwns/obit-watch-backend:${{ env.VERSION }} ghcr.io/mkdwns/obit-watch-backend:latest
       
       - name: Push
         run: |
