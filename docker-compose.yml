@@ -4,8 +4,8 @@ services:
 
   obit-watch-api:
     build: ./backend          # points to the Dockerfile in backend
-    image: ghcr.io/mkdwns/obit-watch-api:v1.1
-    container_name: obit-watch-api
+    image: ghcr.io/mkdwns/obit-watch-backend:latest
+    container_name: obit-watch-backend
     restart: unless-stopped
     ports:
       - "8001:8000"

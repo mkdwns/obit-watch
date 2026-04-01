@@ -22,13 +22,30 @@ jobs:
       - name: Set version tag
         run: echo "VERSION=v1.${{ github.run_number }}" >> $GITHUB_ENV
 
-      - name: Build
+      - name: Build Backend
         run: docker build -t ghcr.io/mkdwns/obit-watch-backend:${{ env.VERSION }} ./backend
       
-      - name: Push
+      - name: Push Backend
         run: |
           docker push ghcr.io/mkdwns/obit-watch-backend:${{ env.VERSION }}
+
+      - name: Tag Backend latest
+        run: |
+          docker tag ghcr.io/mkdwns/obit-watch-backend:${{ env.VERSION }} ghcr.io/mkdwns/obit-watch-backend:latest
           docker push ghcr.io/mkdwns/obit-watch-backend:latest
+
+      # 🔹 Build UI
+      - name: Build UI
+        run: docker build -t ghcr.io/mkdwns/obit-watch-ui:${{ env.VERSION }} ./frontend
+
+      - name: Push UI
+        run: docker push ghcr.io/mkdwns/obit-watch-ui:${{ env.VERSION }}
+
+      # 🔹 Tag UI as latest
+      - name: Tag UI latest
+        run: |
+          docker tag ghcr.io/mkdwns/obit-watch-ui:${{ env.VERSION }} ghcr.io/mkdwns/obit-watch-ui:latest
+          docker push ghcr.io/mkdwns/obit-watch-ui:latest
 
       - name: Trigger Deploy
         run: |

@@ -1,0 +1,40 @@
+name: obit-watch
+
+services:
+  obit-watch-backend:
+    container_name: obit-watch-backend
+    image: ghcr.io/mkdwns/obit-watch-backend:latest
+    restart: unless-stopped
+    ports:
+      - 8001:8000
+    volumes:
+      - /data/compose/78/data:/app/data
+    environment:
+      DB_PATH: /app/data/obit_watch.db
+      TEST_OBITS_ENABLED: "true"
+      ALERT_FROM: "${ALERT_FROM}"
+      ALERT_TO: "${ALERT_TO}"
+      SCRAPE_DELAY: "3"
+      SCAN_CRON_MINUTE: "0"
+      SCAN_CRON_HOUR: "6"
+      SMTP_HOST: "${SMTP_HOST}"
+      SMTP_USER: "${SMTP_USER}"
+      SMTP_PORT: "${SMTP_PORT}"
+      SMTP_PASS: "${SMTP_PASS}"
+    networks:
+      - obit-watch-net
+
+  obit-watch-ui:
+    image: ghcr.io/mkdwns/obit-watch-ui:latest
+    container_name: obit-watch-ui
+    restart: unless-stopped
+    ports:
+      - "3232:80"
+
+    networks:
+      - obit-watch-net
+
+networks:
+  obit-watch-net:
+    name: obit-watch-net
+    external: true
